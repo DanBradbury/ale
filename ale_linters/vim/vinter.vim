@@ -7,10 +7,7 @@ call ale#Set('vim_vinter_options', '')
 function! ale_linters#vim#vinter#GetCommand(buffer) abort
     let l:executable = ale#Var(a:buffer, 'vim_vinter_executable')
 
-    return ale#vim#EscapeExecutable(l:executable, 'vinter')
-    \   . ' --format json '
-    \   . ale#Var(a:buffer, 'vim_vinter_options')
-    \   . ' --stdin %s'
+    return ale#vim#EscapeExecutable(l:executable, 'vinter') . ' --format json .'
 endfunction
 
 function! ale_linters#vim#vinter#GetType(severity) abort
@@ -24,9 +21,9 @@ function! ale_linters#vim#vinter#GetType(severity) abort
 endfunction
 
 " Handle output from rubocop and linters that depend on it (e.b. standardrb)
-function! ale#vim#vinter#HandleOutput(buffer, lines) abort
+function! ale_linters#vim#vinter#HandleOutput(buffer, lines) abort
     try
-        let l:errors = json_decode(a:lines[0])
+        let l:errors = json_decode(join(a:lines, "\n"))
     catch
         return []
     endtry
@@ -47,7 +44,7 @@ function! ale#vim#vinter#HandleOutput(buffer, lines) abort
         \   'end_col': l:start_col + l:error['location']['length'] - 1,
         \   'code': l:error['cop_name'],
         \   'text': l:error['message'],
-        \   'type': ale_linters#ruby#rubocop#GetType(l:error['severity']),
+        \   'type': 'E'
         \})
     endfor
 
@@ -56,7 +53,8 @@ endfunction
 
 call ale#linter#Define('vim', {
 \   'name': 'vinter',
-\   'executable': {b -> ale#Var(b, 'vim_vinter_executable')},
-\   'command': function('ale_linters#vim#vinter#GetCommand'),
-\   'callback': 'ale#vim#vinter#HandleOutput',
+\   'executable': 'vinter',
+\   'command': '%e %t --format=json',
+\   'callback': 'ale_linters#vim#vinter#HandleOutput',
+\   'read_buffer': 0,
 \})
