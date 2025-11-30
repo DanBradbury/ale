@@ -23,7 +23,7 @@ endfunction
 " Handle output from rubocop and linters that depend on it (e.b. standardrb)
 function! ale_linters#vim#vinter#HandleOutput(buffer, lines) abort
     try
-        let l:errors = json_decode(join(a:lines, "\n"))
+        let l:errors = json_decode(a:lines[0])
     catch
         return []
     endtry
